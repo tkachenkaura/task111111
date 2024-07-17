@@ -1,13 +1,14 @@
 ﻿namespace DataStructuresLib.Interfaces
 {
-    public interface ICollection
+    public interface ICollection<T>
     {
         int Count { get; }
-        void Add(object item);
-        bool Remove(object item);
+        void Add(T item);
+        bool Remove(T item);
         void Clear();
-        bool Contains(object item);
-        object[] ToArray();
+        bool Contains(T item);
+        T[] ToArray();
     }
 }
+
 
