@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="obj\" />
+    <ProjectReference Include="..\task111111\task111111.csproj" />
   </ItemGroup>
 
 </Project>
