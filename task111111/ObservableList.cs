@@ -4,125 +4,116 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace task111111
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using DataStructuresLib.Interfaces;
+
+namespace DataStructuresLib
 {
-    
-
-    namespace DataStructuresLib
+    public class ObservableList<T> : IList<T>
     {
-        public class ItemAddedEventArgs<T> : EventArgs
-        {
-            public T Item { get; }
+        private readonly List<T> _internalList = new List<T>();
 
-            public ItemAddedEventArgs(T item)
-            {
-                Item = item;
-            }
+        public event EventHandler<EventArgs> ItemAdded;
+        public event EventHandler<EventArgs> ItemRemoved;
+
+        public int Count => _internalList.Count;
+        public bool IsReadOnly => false;
+
+        public T this[int index]
+        {
+            get => _internalList[index];
+            set => _internalList[index] = value;
         }
 
-        public class ItemRemovedEventArgs<T> : EventArgs
+        public void Add(T item)
         {
-            public T Item { get; }
-
-            public ItemRemovedEventArgs(T item)
-            {
-                Item = item;
-            }
+            _internalList.Add(item);
+            ItemAdded?.Invoke(this, EventArgs.Empty);
         }
 
-        public class ItemInsertedEventArgs<T> : EventArgs
+        public void Clear()
         {
-            public T Item { get; }
-            public int Index { get; }
-
-            public ItemInsertedEventArgs(T item, int index)
-            {
-                Item = item;
-                Index = index;
-            }
+            _internalList.Clear();
+            ItemRemoved?.Invoke(this, EventArgs.Empty);
         }
 
-        public class ObservableList<T> : IList<T>
+        public bool Contains(T item)
         {
-            private readonly List<T> _internalList = new List<T>();
+            return _internalList.Contains(item);
+        }
 
-            public event EventHandler<ItemAddedEventArgs<T>> ItemAdded;
-            public event EventHandler<ItemRemovedEventArgs<T>> ItemRemoved;
-            public event EventHandler<ItemInsertedEventArgs<T>> ItemInserted;
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            _internalList.CopyTo(array, arrayIndex);
+        }
 
-            protected virtual void OnItemAdded(T item)
+        public IEnumerator<T> GetEnumerator()
+        {
+            return new ListEnumerator<T>(_internalList);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public int IndexOf(T item)
+        {
+            return _internalList.IndexOf(item);
+        }
+
+        public void Insert(int index, T item)
+        {
+            _internalList.Insert(index, item);
+            ItemAdded?.Invoke(this, EventArgs.Empty);
+        }
+
+        public bool Remove(T item)
+        {
+            var removed = _internalList.Remove(item);
+            if (removed)
             {
-                ItemAdded?.Invoke(this, new ItemAddedEventArgs<T>(item));
+                ItemRemoved?.Invoke(this, EventArgs.Empty);
+            }
+            return removed;
+        }
+
+        public void RemoveAt(int index)
+        {
+            _internalList.RemoveAt(index);
+            ItemRemoved?.Invoke(this, EventArgs.Empty);
+        }
+
+        private class ListEnumerator<T> : IEnumerator<T>
+        {
+            private readonly IList<T> _list;
+            private int _position = -1;
+
+            public ListEnumerator(IList<T> list)
+            {
+                _list = list;
             }
 
-            protected virtual void OnItemRemoved(T item)
+            public T Current => _list[_position];
+
+            object IEnumerator.Current => Current;
+
+            public bool MoveNext()
             {
-                ItemRemoved?.Invoke(this, new ItemRemovedEventArgs<T>(item));
+                _position++;
+                return _position < _list.Count;
             }
 
-            protected virtual void OnItemInserted(T item, int index)
+            public void Reset()
             {
-                ItemInserted?.Invoke(this, new ItemInsertedEventArgs<T>(item, index));
+                _position = -1;
             }
 
-            public T this[int index]
+            public void Dispose()
             {
-                get => _internalList[index];
-                set => _internalList[index] = value;
             }
-
-            public int Count => _internalList.Count;
-            public bool IsReadOnly => ((ICollection<T>)_internalList).IsReadOnly;
-
-            public void Add(T item)
-            {
-                _internalList.Add(item);
-                OnItemAdded(item);
-            }
-
-            public void Clear()
-            {
-                var items = new List<T>(_internalList);
-                _internalList.Clear();
-                foreach (var item in items)
-                {
-                    OnItemRemoved(item);
-                }
-            }
-
-            public bool Contains(T item) => _internalList.Contains(item);
-
-            public void CopyTo(T[] array, int arrayIndex) => _internalList.CopyTo(array, arrayIndex);
-
-            public IEnumerator<T> GetEnumerator() => _internalList.GetEnumerator();
-
-            public int IndexOf(T item) => _internalList.IndexOf(item);
-
-            public void Insert(int index, T item)
-            {
-                _internalList.Insert(index, item);
-                OnItemInserted(item, index);
-            }
-
-            public bool Remove(T item)
-            {
-                bool removed = _internalList.Remove(item);
-                if (removed)
-                {
-                    OnItemRemoved(item);
-                }
-                return removed;
-            }
-
-            public void RemoveAt(int index)
-            {
-                var item = _internalList[index];
-                _internalList.RemoveAt(index);
-                OnItemRemoved(item);
-            }
-
-            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => _internalList.GetEnumerator();
         }
     }
-
 }
